@@ -193,6 +193,7 @@ h1 em {
 
 .collection-heading {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 24px;
@@ -281,6 +282,39 @@ h1 em {
 .search-box input::placeholder {
   color: #8e9991;
 }
+.collection-tools {
+  display: flex;
+  align-items: center;
+  justify-content: end;
+  gap: 9px;
+  margin-left: auto;
+}
+.collection-tools .text-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 34px;
+  margin: 0;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  white-space: nowrap;
+}
+.collection-tools .text-button:hover:not(:disabled) {
+  border-color: var(--green);
+  background: var(--mint);
+}
+.collection-tools .text-button:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+.collection-tools .download-button {
+  border-color: #d9b69f;
+  color: #975132;
+}
+.collection-tools .download-button span {
+  color: inherit;
+}
 kbd {
   padding: 1px 5px;
   border: 1px solid var(--line);
@@ -299,6 +333,63 @@ kbd {
   color: #79847c;
   font-size: 9px;
   text-transform: uppercase;
+}
+.entry-form {
+  display: grid;
+  gap: 16px;
+  margin: 18px 0 8px;
+  padding: 18px;
+  border-left: 2px solid var(--green);
+  background: rgba(228, 238, 229, 0.62);
+}
+.entry-form-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.entry-form-heading h2 {
+  margin: 0;
+  font-family: "Playfair Display", serif;
+  font-size: 19px;
+  font-weight: 500;
+}
+.form-cancel {
+  padding: 4px 0;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 11px;
+}
+.entry-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+}
+.entry-fields label {
+  display: grid;
+  gap: 6px;
+  color: #657168;
+  font-family: var(--mono);
+  font-size: 9px;
+  text-transform: uppercase;
+}
+.entry-fields input {
+  width: 100%;
+  min-width: 0;
+  height: 35px;
+  padding: 0 9px;
+  border: 1px solid #cfd8ce;
+  border-radius: 2px;
+  outline-color: var(--green);
+  background: #fff;
+  color: var(--ink);
+  font-family: "DM Sans", sans-serif;
+  font-size: 12px;
+  text-transform: none;
+}
+.entry-form > .upload-button {
+  justify-self: start;
 }
 .table-scroll {
   overflow-x: auto;
@@ -335,6 +426,59 @@ tbody tr:hover {
   color: #9aa49b;
   font-family: var(--mono);
   font-size: 9px;
+}
+.actions-heading,
+.actions-cell {
+  width: 140px;
+  padding-right: 0;
+  text-align: right;
+}
+.row-edit-input {
+  width: max(100px, 100%);
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid #cfd8ce;
+  border-radius: 2px;
+  outline-color: var(--green);
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+}
+.row-edit-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  white-space: nowrap;
+}
+.row-action-button {
+  padding: 4px 0;
+  border: 0;
+  background: transparent;
+  color: var(--green);
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 600;
+}
+.row-action-button:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.cancel-row-button {
+  color: var(--muted);
+}
+.delete-button {
+  padding: 4px 0;
+  border: 0;
+  background: transparent;
+  color: #9b6350;
+  cursor: pointer;
+  font-size: 10px;
+}
+.delete-button:hover {
+  color: #a63c28;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 .empty-cell {
   color: #b1bab2;
@@ -491,7 +635,19 @@ tbody tr:hover {
     display: none;
   }
   .search-box {
+    width: auto;
+    min-width: 160px;
+    flex: 1;
+  }
+  .collection-tools {
     width: 100%;
+    flex-wrap: wrap;
+    margin-left: 0;
+  }
+  .collection-tools .text-button {
+    min-height: 34px;
+    padding: 0 8px;
+    font-size: 11px;
   }
   .footer {
     font-size: 8px;

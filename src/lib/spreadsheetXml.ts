@@ -68,7 +68,11 @@ export function serializeSpreadsheetXml(sheets: CollectionSheet[]): string {
     "Workbook",
   );
   const workbook = xmlDocument.documentElement;
-  workbook.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:ss", namespace);
+  workbook.setAttributeNS(
+    "http://www.w3.org/2000/xmlns/",
+    "xmlns:ss",
+    namespace,
+  );
 
   for (const sheet of sheets) {
     const worksheet = xmlDocument.createElementNS(namespace, "Worksheet");
