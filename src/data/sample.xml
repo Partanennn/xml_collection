@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+  xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+  <Worksheet ss:Name="Movies">
+    <Table>
+      <Row><Cell><Data ss:Type="String">Title</Data></Cell><Cell><Data ss:Type="String">Director</Data></Cell><Cell><Data ss:Type="String">Year</Data></Cell><Cell><Data ss:Type="String">Rating</Data></Cell></Row>
+      <Row><Cell><Data ss:Type="String">In the Mood for Love</Data></Cell><Cell><Data ss:Type="String">Wong Kar-wai</Data></Cell><Cell><Data ss:Type="Number">2000</Data></Cell><Cell><Data ss:Type="String">Essential</Data></Cell></Row>
+      <Row><Cell><Data ss:Type="String">Perfect Days</Data></Cell><Cell><Data ss:Type="String">Wim Wenders</Data></Cell><Cell><Data ss:Type="Number">2023</Data></Cell><Cell><Data ss:Type="String">Loved</Data></Cell></Row>
+      <Row><Cell><Data ss:Type="String">The Grand Budapest Hotel</Data></Cell><Cell><Data ss:Type="String">Wes Anderson</Data></Cell><Cell><Data ss:Type="Number">2014</Data></Cell><Cell><Data ss:Type="String">Loved</Data></Cell></Row>
+    </Table>
+  </Worksheet>
+  <Worksheet ss:Name="Books">
+    <Table>
+      <Row><Cell><Data ss:Type="String">Title</Data></Cell><Cell><Data ss:Type="String">Author</Data></Cell><Cell><Data ss:Type="String">Year</Data></Cell><Cell><Data ss:Type="String">Status</Data></Cell></Row>
+      <Row><Cell><Data ss:Type="String">The Dispossessed</Data></Cell><Cell><Data ss:Type="String">Ursula K. Le Guin</Data></Cell><Cell><Data ss:Type="Number">1974</Data></Cell><Cell><Data ss:Type="String">Read</Data></Cell></Row>
+      <Row><Cell><Data ss:Type="String">Ways of Seeing</Data></Cell><Cell><Data ss:Type="String">John Berger</Data></Cell><Cell><Data ss:Type="Number">1972</Data></Cell><Cell><Data ss:Type="String">Reading</Data></Cell></Row>
+      <Row><Cell><Data ss:Type="String">Braiding Sweetgrass</Data></Cell><Cell><Data ss:Type="String">Robin Wall Kimmerer</Data></Cell><Cell><Data ss:Type="Number">2013</Data></Cell><Cell><Data ss:Type="String">To read</Data></Cell></Row>
+    </Table>
+  </Worksheet>
+  <Worksheet ss:Name="TV Series">
+    <Table>
+      <Row><Cell><Data ss:Type="String">Title</Data></Cell><Cell><Data ss:Type="String">Creator</Data></Cell><Cell><Data ss:Type="String">Seasons</Data></Cell><Cell><Data ss:Type="String">Status</Data></Cell></Row>
+      <Row><Cell><Data ss:Type="String">The Bear</Data></Cell><Cell><Data ss:Type="String">Christopher Storer</Data></Cell><Cell><Data ss:Type="Number">3</Data></Cell><Cell><Data ss:Type="String">Watching</Data></Cell></Row>
+      <Row><Cell><Data ss:Type="String">Station Eleven</Data></Cell><Cell><Data ss:Type="String">Patrick Somerville</Data></Cell><Cell><Data ss:Type="Number">1</Data></Cell><Cell><Data ss:Type="String">Finished</Data></Cell></Row>
+      <Row><Cell><Data ss:Type="String">Somebody Somewhere</Data></Cell><Cell><Data ss:Type="String">Hannah Bos and Paul Thureen</Data></Cell><Cell><Data ss:Type="Number">3</Data></Cell><Cell><Data ss:Type="String">Finished</Data></Cell></Row>
+    </Table>
+  </Worksheet>
+</Workbook>
