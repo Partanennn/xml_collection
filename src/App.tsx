@@ -11,6 +11,10 @@ import {
   type CollectionKind,
   type CollectionSheet,
 } from "./lib/spreadsheetXml";
+import {
+  parseSpreadsheetXlsx,
+  serializeSpreadsheetXlsx,
+} from "./lib/spreadsheetXlsx";
 
 const entryLabels: Record<CollectionKind, string> = {
   movies: "movie",
@@ -60,7 +64,9 @@ export default function App() {
   async function loadFile(file?: File) {
     if (!file) return;
     try {
-      const parsedSheets = parseSpreadsheetXml(await file.text());
+      const parsedSheets = /\.xlsx$/i.test(file.name)
+        ? await parseSpreadsheetXlsx(file)
+        : parseSpreadsheetXml(await file.text());
       setSheets(parsedSheets);
       setFileName(file.name);
       setSearch("");
@@ -124,20 +130,32 @@ export default function App() {
     setIsDirty(true);
   }
 
-  function downloadWorkbook() {
-    const blob = new Blob([serializeSpreadsheetXml(sheets)], {
-      type: "application/xml",
-    });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `${fileName.replace(/\.xml$/i, "")}-updated.xml`;
-    link.hidden = true;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
-    setIsDirty(false);
+  async function downloadWorkbook() {
+    try {
+      const isXlsx = /\.xlsx$/i.test(fileName);
+      const blob = isXlsx
+        ? await serializeSpreadsheetXlsx(sheets)
+        : new Blob([serializeSpreadsheetXml(sheets)], {
+            type: "application/xml",
+          });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${fileName.replace(/\.(xml|xlsx)$/i, "")}-updated.${isXlsx ? "xlsx" : "xml"}`;
+      link.hidden = true;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+      setIsDirty(false);
+      setError("");
+    } catch (cause) {
+      setError(
+        cause instanceof Error
+          ? cause.message
+          : "Could not save the updated workbook.",
+      );
+    }
   }
 
   const titleHeader =
@@ -162,13 +180,13 @@ export default function App() {
           className="upload-button"
           onClick={() => fileInput.current?.click()}
         >
-          <span aria-hidden="true">↑</span> Open XML
+          <span aria-hidden="true">↑</span> Open workbook
         </button>
         <input
           ref={fileInput}
           className="visually-hidden"
           type="file"
-          accept=".xml,text/xml,application/xml"
+          accept=".xml,.xlsx,text/xml,application/xml,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
           onChange={(event) => void loadFile(event.target.files?.[0])}
         />
       </header>
@@ -192,6 +210,7 @@ export default function App() {
           entryLabel={entryLabels[activeCollection]}
           canEdit={!!activeSheet && !isAddingEntry && !isEditingEntry}
           isDirty={isDirty}
+          downloadLabel={`Download updated ${/\.xlsx$/i.test(fileName) ? "XLSX" : "XML"}`}
           search={search}
           onSelectCollection={(kind) => {
             setActiveCollection(kind);
@@ -285,7 +304,7 @@ export default function App() {
                   : `No ${collectionLabels[activeCollection].toLowerCase()} sheet found`}
               </h2>
               <p>
-                Use an Excel XML workbook with a named{" "}
+                Use an Excel XML or .xlsx workbook with a named{" "}
                 {collectionLabels[activeCollection].toLowerCase()} sheet and a
                 header row.
               </p>

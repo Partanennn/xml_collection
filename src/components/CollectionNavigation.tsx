@@ -13,6 +13,7 @@ interface CollectionNavigationProps {
   entryLabel: string;
   canEdit: boolean;
   isDirty: boolean;
+  downloadLabel: string;
   search: string;
   onSelectCollection: (collection: CollectionKind) => void;
   onAddEntry: () => void;
@@ -26,6 +27,7 @@ export default function CollectionNavigation({
   entryLabel,
   canEdit,
   isDirty,
+  downloadLabel,
   search,
   onSelectCollection,
   onAddEntry,
@@ -65,7 +67,7 @@ export default function CollectionNavigation({
         </button>
         {isDirty && (
           <button className="text-button download-button" onClick={onDownload}>
-            <span aria-hidden="true">↓</span> Download updated XML
+            <span aria-hidden="true">↓</span> {downloadLabel}
           </button>
         )}
         <label className="search-box">

@@ -499,6 +499,14 @@ tbody tr:hover {
   height: 32px;
   padding: 0 7px;
 }
+.purchase-place-editor {
+  display: grid;
+  min-width: 170px;
+  gap: 6px;
+}
+.new-purchase-place-input {
+  min-width: 170px;
+}
 .row-edit-actions {
   display: flex;
   align-items: center;

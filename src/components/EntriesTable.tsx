@@ -4,6 +4,8 @@ function isDigitalizeField(header: string) {
   return header.toLocaleLowerCase() === "digitalize";
 }
 
+const newPurchasePlaceOption = "__add_new_purchase_place__";
+
 interface EntriesTableProps {
   headers: string[];
   items: Array<Record<string, string>>;
@@ -36,6 +38,9 @@ export default function EntriesTable({
   > | null>(null);
   const [draft, setDraft] = useState<Record<string, string>>({});
   const [error, setError] = useState("");
+  const [isEnteringNewPurchasePlace, setIsEnteringNewPurchasePlace] =
+    useState(false);
+  const [newPurchasePlace, setNewPurchasePlace] = useState("");
   const [sort, setSort] = useState<{
     header: string;
     direction: "ascending" | "descending";
@@ -74,21 +79,45 @@ export default function EntriesTable({
 
   function startEditing(entry: Record<string, string>) {
     setEditingEntry(entry);
-    setDraft({ ...entry });
+    const purchasePlaceHeader = headers.find(
+      (header) => header.trim().toLocaleLowerCase() === "purchase place",
+    );
+    setDraft({
+      ...entry,
+      ...(purchasePlaceHeader && {
+        [purchasePlaceHeader]: entry[purchasePlaceHeader]?.trim() ?? "",
+      }),
+    });
+    setIsEnteringNewPurchasePlace(false);
+    setNewPurchasePlace("");
     setError("");
     onEditingChange(true);
   }
 
   function cancelEditing() {
     setEditingEntry(null);
+    setIsEnteringNewPurchasePlace(false);
+    setNewPurchasePlace("");
     setError("");
     onEditingChange(false);
   }
 
   function saveEditing() {
     if (!editingEntry) return;
+    const purchasePlaceHeader = headers.find(
+      (header) => header.trim().toLocaleLowerCase() === "purchase place",
+    );
+    if (isEnteringNewPurchasePlace && !newPurchasePlace.trim()) {
+      setError("Enter a purchase place.");
+      return;
+    }
     const updated = Object.fromEntries(
-      headers.map((header) => [header, draft[header]?.trim() ?? ""]),
+      headers.map((header) => [
+        header,
+        header === purchasePlaceHeader && isEnteringNewPurchasePlace
+          ? newPurchasePlace.trim()
+          : (draft[header]?.trim() ?? ""),
+      ]),
     );
     if (!updated[titleHeader]) {
       setError(`${titleHeader} is required.`);
@@ -97,6 +126,8 @@ export default function EntriesTable({
 
     onUpdate(editingEntry, updated);
     setEditingEntry(null);
+    setIsEnteringNewPurchasePlace(false);
+    setNewPurchasePlace("");
     setError("");
     onEditingChange(false);
   }
@@ -169,25 +200,52 @@ export default function EntriesTable({
                         />
                       ) : header.trim().toLocaleLowerCase() ===
                         "purchase place" ? (
-                        <select
-                          className="row-edit-select"
-                          aria-label={`Update ${header}`}
-                          value={draft[header] ?? ""}
-                          onChange={(event) => {
-                            setDraft((current) => ({
-                              ...current,
-                              [header]: event.target.value,
-                            }));
-                            setError("");
-                          }}
-                        >
-                          <option value="">Select a purchase place</option>
-                          {purchasePlaces.map((place) => (
-                            <option key={place} value={place}>
-                              {place}
+                        <div className="purchase-place-editor">
+                          <select
+                            className="row-edit-select"
+                            aria-label={`Update ${header}`}
+                            value={
+                              isEnteringNewPurchasePlace
+                                ? newPurchasePlaceOption
+                                : (draft[header] ?? "")
+                            }
+                            onChange={(event) => {
+                              const value = event.target.value;
+                              setIsEnteringNewPurchasePlace(
+                                value === newPurchasePlaceOption,
+                              );
+                              setNewPurchasePlace("");
+                              setDraft((current) => ({
+                                ...current,
+                                [header]:
+                                  value === newPurchasePlaceOption ? "" : value,
+                              }));
+                              setError("");
+                            }}
+                          >
+                            <option value="">Select a purchase place</option>
+                            {purchasePlaces.map((place) => (
+                              <option key={place} value={place}>
+                                {place}
+                              </option>
+                            ))}
+                            <option value={newPurchasePlaceOption}>
+                              Add a new place…
                             </option>
-                          ))}
-                        </select>
+                          </select>
+                          {isEnteringNewPurchasePlace && (
+                            <input
+                              className="row-edit-input new-purchase-place-input"
+                              aria-label="New purchase place"
+                              placeholder="Enter a new place"
+                              value={newPurchasePlace}
+                              onChange={(event) => {
+                                setNewPurchasePlace(event.target.value);
+                                setError("");
+                              }}
+                            />
+                          )}
+                        </div>
                       ) : (
                         <input
                           className="row-edit-input"

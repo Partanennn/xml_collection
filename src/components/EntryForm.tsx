@@ -4,6 +4,8 @@ function isDigitalizeField(header: string) {
   return header.toLocaleLowerCase() === "digitalize";
 }
 
+const newPurchasePlaceOption = "__add_new_purchase_place__";
+
 interface EntryFormProps {
   headers: string[];
   titleHeader: string;
@@ -24,12 +26,21 @@ export default function EntryForm({
   const [draft, setDraft] = useState<Record<string, string>>(() =>
     Object.fromEntries(headers.map((header) => [header, ""])),
   );
+  const [isEnteringNewPurchasePlace, setIsEnteringNewPurchasePlace] =
+    useState(false);
+  const [newPurchasePlace, setNewPurchasePlace] = useState("");
 
   function submitEntry(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     onSubmit(
       Object.fromEntries(
-        headers.map((header) => [header, draft[header]?.trim() ?? ""]),
+        headers.map((header) => [
+          header,
+          header.trim().toLocaleLowerCase() === "purchase place" &&
+          isEnteringNewPurchasePlace
+            ? newPurchasePlace.trim()
+            : (draft[header]?.trim() ?? ""),
+        ]),
       ),
     );
   }
@@ -58,22 +69,48 @@ export default function EntryForm({
                 }
               />
             ) : header.trim().toLocaleLowerCase() === "purchase place" ? (
-              <select
-                value={draft[header] ?? ""}
-                onChange={(event) =>
-                  setDraft((current) => ({
-                    ...current,
-                    [header]: event.target.value,
-                  }))
-                }
-              >
-                <option value="">Select a purchase place</option>
-                {purchasePlaces.map((place) => (
-                  <option key={place} value={place}>
-                    {place}
+              <>
+                <select
+                  value={
+                    isEnteringNewPurchasePlace
+                      ? newPurchasePlaceOption
+                      : (draft[header] ?? "")
+                  }
+                  onChange={(event) => {
+                    const value = event.target.value;
+                    setIsEnteringNewPurchasePlace(
+                      value === newPurchasePlaceOption,
+                    );
+                    setNewPurchasePlace("");
+                    setDraft((current) => ({
+                      ...current,
+                      [header]: value === newPurchasePlaceOption ? "" : value,
+                    }));
+                  }}
+                >
+                  <option value="">Select a purchase place</option>
+                  {purchasePlaces.map((place) => (
+                    <option key={place} value={place}>
+                      {place}
+                    </option>
+                  ))}
+                  <option value={newPurchasePlaceOption}>
+                    Add a new place…
                   </option>
-                ))}
-              </select>
+                </select>
+                {isEnteringNewPurchasePlace && (
+                  <input
+                    autoFocus
+                    required
+                    aria-label="New purchase place"
+                    placeholder="Enter a new place"
+                    value={newPurchasePlace}
+                    onChange={(event) =>
+                      setNewPurchasePlace(event.target.value)
+                    }
+                  />
+                )}
+              </>
             ) : (
               <input
                 autoFocus={header === titleHeader}

@@ -39,44 +39,57 @@ export function parseSpreadsheetXml(xmlText: string): CollectionSheet[] {
     );
   }
 
-  return worksheets.map((worksheet, index) => {
-    const name =
-      Array.from(worksheet.attributes).find(
-        (attribute) => attribute.localName === "Name",
-      )?.value ?? `Sheet ${index + 1}`;
-    const rows = Array.from(worksheet.getElementsByTagName("*"))
-      .filter((element) => element.localName === "Row")
-      .map(readRow)
-      .filter((row) => row.some((value) => value.length > 0));
-    const sourceHeaders = rows.shift() ?? [];
-    const columnCount = Math.max(
-      sourceHeaders.length,
-      ...rows.map((row) => row.length),
-    );
-    const headers = makeUniqueHeaders(sourceHeaders, columnCount);
-    const items = rows.map((row) =>
-      Object.fromEntries(
-        headers.map((header, column) => [header, row[column] ?? ""]),
-      ),
-    );
+  return normalizeCollectionSheets(
+    worksheets.map((worksheet, index) => {
+      const name =
+        Array.from(worksheet.attributes).find(
+          (attribute) => attribute.localName === "Name",
+        )?.value ?? `Sheet ${index + 1}`;
+      const rows = Array.from(worksheet.getElementsByTagName("*"))
+        .filter((element) => element.localName === "Row")
+        .map(readRow)
+        .filter((row) => row.some((value) => value.length > 0));
+      const sourceHeaders = rows.shift() ?? [];
+      const columnCount = Math.max(
+        sourceHeaders.length,
+        ...rows.map((row) => row.length),
+      );
+      const headers = makeUniqueHeaders(sourceHeaders, columnCount);
+      const items = rows.map((row) =>
+        Object.fromEntries(
+          headers.map((header, column) => [header, row[column] ?? ""]),
+        ),
+      );
+      return { name, headers, items };
+    }),
+  );
+}
+
+export function normalizeCollectionSheets(
+  sheets: CollectionSheet[],
+): CollectionSheet[] {
+  return sheets.map((sheet) => {
     const supportsDigitalize =
-      categoryMatchers.movies.test(name) || categoryMatchers.series.test(name);
+      categoryMatchers.movies.test(sheet.name) ||
+      categoryMatchers.series.test(sheet.name);
     const expectedHeaders = supportsDigitalize
       ? [...purchaseHeaders, digitalizeHeader]
       : purchaseHeaders;
     const missingHeaders = expectedHeaders.filter(
       (expectedHeader) =>
-        !headers.some(
+        !sheet.headers.some(
           (header) =>
-            header.toLocaleLowerCase() === expectedHeader.toLocaleLowerCase(),
+            header.trim().toLocaleLowerCase() ===
+            expectedHeader.toLocaleLowerCase(),
         ),
     );
-    const allHeaders = [...headers, ...missingHeaders];
-    const digitalizeColumn = allHeaders.find(
+    const headers = [...sheet.headers, ...missingHeaders];
+    const digitalizeColumn = headers.find(
       (header) =>
-        header.toLocaleLowerCase() === digitalizeHeader.toLocaleLowerCase(),
+        header.trim().toLocaleLowerCase() ===
+        digitalizeHeader.toLocaleLowerCase(),
     );
-    const completeItems = items.map((item) => {
+    const items = sheet.items.map((item) => {
       const completeItem = {
         ...Object.fromEntries(missingHeaders.map((header) => [header, ""])),
         ...item,
@@ -91,7 +104,7 @@ export function parseSpreadsheetXml(xmlText: string): CollectionSheet[] {
       return completeItem;
     });
 
-    return { name, headers: allHeaders, items: completeItems };
+    return { ...sheet, headers, items };
   });
 }
 
@@ -178,7 +191,7 @@ function createXmlRow(
   return row;
 }
 
-function makeUniqueHeaders(
+export function makeUniqueHeaders(
   sourceHeaders: string[],
   columnCount: number,
 ): string[] {
