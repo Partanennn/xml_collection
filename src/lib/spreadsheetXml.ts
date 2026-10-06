@@ -6,6 +6,9 @@ export interface CollectionSheet {
   items: Array<Record<string, string>>;
 }
 
+const purchaseHeaders = ["Purchase place", "Price", "Purchase date"];
+const digitalizeHeader = "Digitalize";
+
 const categoryMatchers: Record<CollectionKind, RegExp> = {
   movies: /movie|film/i,
   books: /book/i,
@@ -56,8 +59,39 @@ export function parseSpreadsheetXml(xmlText: string): CollectionSheet[] {
         headers.map((header, column) => [header, row[column] ?? ""]),
       ),
     );
+    const supportsDigitalize =
+      categoryMatchers.movies.test(name) || categoryMatchers.series.test(name);
+    const expectedHeaders = supportsDigitalize
+      ? [...purchaseHeaders, digitalizeHeader]
+      : purchaseHeaders;
+    const missingHeaders = expectedHeaders.filter(
+      (expectedHeader) =>
+        !headers.some(
+          (header) =>
+            header.toLocaleLowerCase() === expectedHeader.toLocaleLowerCase(),
+        ),
+    );
+    const allHeaders = [...headers, ...missingHeaders];
+    const digitalizeColumn = allHeaders.find(
+      (header) =>
+        header.toLocaleLowerCase() === digitalizeHeader.toLocaleLowerCase(),
+    );
+    const completeItems = items.map((item) => {
+      const completeItem = {
+        ...Object.fromEntries(missingHeaders.map((header) => [header, ""])),
+        ...item,
+      };
+      if (supportsDigitalize && digitalizeColumn) {
+        completeItem[digitalizeColumn] = /^(x|true|1)$/i.test(
+          completeItem[digitalizeColumn].trim(),
+        )
+          ? "X"
+          : "";
+      }
+      return completeItem;
+    });
 
-    return { name, headers, items };
+    return { name, headers: allHeaders, items: completeItems };
   });
 }
 

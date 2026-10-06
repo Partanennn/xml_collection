@@ -1,5 +1,9 @@
 import { useState } from "react";
 
+function isDigitalizeField(header: string) {
+  return header.toLocaleLowerCase() === "digitalize";
+}
+
 interface EntriesTableProps {
   headers: string[];
   items: Array<Record<string, string>>;
@@ -147,19 +151,35 @@ export default function EntriesTable({
                 {headers.map((header) => (
                   <td key={header}>
                     {isEditing ? (
-                      <input
-                        className="row-edit-input"
-                        aria-label={`Update ${header}`}
-                        autoFocus={header === titleHeader}
-                        value={draft[header] ?? ""}
-                        onChange={(event) => {
-                          setDraft((current) => ({
-                            ...current,
-                            [header]: event.target.value,
-                          }));
-                          setError("");
-                        }}
-                      />
+                      isDigitalizeField(header) ? (
+                        <input
+                          type="checkbox"
+                          className="row-edit-input digitalize-checkbox"
+                          aria-label={`Update ${header}`}
+                          checked={draft[header] === "X"}
+                          onChange={(event) => {
+                            setDraft((current) => ({
+                              ...current,
+                              [header]: event.target.checked ? "X" : "",
+                            }));
+                            setError("");
+                          }}
+                        />
+                      ) : (
+                        <input
+                          className="row-edit-input"
+                          aria-label={`Update ${header}`}
+                          autoFocus={header === titleHeader}
+                          value={draft[header] ?? ""}
+                          onChange={(event) => {
+                            setDraft((current) => ({
+                              ...current,
+                              [header]: event.target.value,
+                            }));
+                            setError("");
+                          }}
+                        />
+                      )
                     ) : (
                       item[header] || <span className="empty-cell">—</span>
                     )}

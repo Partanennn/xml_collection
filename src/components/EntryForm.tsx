@@ -1,5 +1,9 @@
 import { type FormEvent, useState } from "react";
 
+function isDigitalizeField(header: string) {
+  return header.toLocaleLowerCase() === "digitalize";
+}
+
 interface EntryFormProps {
   headers: string[];
   titleHeader: string;
@@ -40,17 +44,30 @@ export default function EntryForm({
         {headers.map((header) => (
           <label key={header}>
             <span>{header}</span>
-            <input
-              autoFocus={header === titleHeader}
-              required={header === titleHeader}
-              value={draft[header] ?? ""}
-              onChange={(event) =>
-                setDraft((current) => ({
-                  ...current,
-                  [header]: event.target.value,
-                }))
-              }
-            />
+            {isDigitalizeField(header) ? (
+              <input
+                type="checkbox"
+                checked={draft[header] === "X"}
+                onChange={(event) =>
+                  setDraft((current) => ({
+                    ...current,
+                    [header]: event.target.checked ? "X" : "",
+                  }))
+                }
+              />
+            ) : (
+              <input
+                autoFocus={header === titleHeader}
+                required={header === titleHeader}
+                value={draft[header] ?? ""}
+                onChange={(event) =>
+                  setDraft((current) => ({
+                    ...current,
+                    [header]: event.target.value,
+                  }))
+                }
+              />
+            )}
           </label>
         ))}
       </div>
