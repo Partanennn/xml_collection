@@ -13,4 +13,6 @@ Use **Open XML** to load a workbook. The app looks for worksheets named Movies (
 
 On any collection tab, use **Add**, **Update**, or a row's **Delete** action to edit that sheet. **Download updated XML** exports all sheets to a new `*-updated.xml` file; browsers do not allow the app to overwrite the selected source file directly.
 
+On the Movies and Books tabs, select the **Title** or **Year** column heading to sort ascending or descending.
+
 Build for production with `npm run build`.

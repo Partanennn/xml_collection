@@ -1,4 +1,7 @@
-import { type FormEvent, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
+import CollectionNavigation from "./components/CollectionNavigation";
+import EntriesTable from "./components/EntriesTable";
+import EntryForm from "./components/EntryForm";
 import sampleWorkbook from "./data/sample.xml?raw";
 import {
   collectionLabels,
@@ -9,7 +12,6 @@ import {
   type CollectionSheet,
 } from "./lib/spreadsheetXml";
 
-const collections: CollectionKind[] = ["movies", "books", "series"];
 const entryLabels: Record<CollectionKind, string> = {
   movies: "movie",
   books: "book",
@@ -27,12 +29,7 @@ export default function App() {
   const [error, setError] = useState("");
   const [isDirty, setIsDirty] = useState(false);
   const [isAddingEntry, setIsAddingEntry] = useState(false);
-  const [entryDraft, setEntryDraft] = useState<Record<string, string>>({});
-  const [editingEntry, setEditingEntry] = useState<Record<
-    string,
-    string
-  > | null>(null);
-  const [editDraft, setEditDraft] = useState<Record<string, string>>({});
+  const [isEditingEntry, setIsEditingEntry] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
 
   const activeSheet = getSheetForCollection(sheets, activeCollection);
@@ -56,7 +53,7 @@ export default function App() {
       setError("");
       setIsDirty(false);
       setIsAddingEntry(false);
-      setEditingEntry(null);
+      setIsEditingEntry(false);
     } catch (cause) {
       setError(
         cause instanceof Error
@@ -66,26 +63,9 @@ export default function App() {
     }
   }
 
-  function startAddingEntry() {
-    setEditingEntry(null);
-    setEntryDraft(
-      Object.fromEntries(
-        (activeSheet?.headers ?? []).map((header) => [header, ""]),
-      ),
-    );
-    setIsAddingEntry(true);
-  }
-
-  function addEntry(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  function addEntry(entry: Record<string, string>) {
     if (!activeSheet) return;
 
-    const entry = Object.fromEntries(
-      activeSheet.headers.map((header) => [
-        header,
-        entryDraft[header]?.trim() ?? "",
-      ]),
-    );
     setSheets((current) =>
       current.map((sheet) =>
         sheet === activeSheet
@@ -98,46 +78,24 @@ export default function App() {
     setIsAddingEntry(false);
   }
 
-  function startUpdatingEntry(entry: Record<string, string>) {
-    setIsAddingEntry(false);
-    setEditingEntry(entry);
-    setEditDraft({ ...entry });
-    setError("");
-  }
-
-  function saveUpdatedEntry() {
-    if (!activeSheet || !editingEntry) return;
-    const updatedEntry = Object.fromEntries(
-      activeSheet.headers.map((header) => [
-        header,
-        editDraft[header]?.trim() ?? "",
-      ]),
-    );
-    if (!updatedEntry[titleHeader]) {
-      setError(`${titleHeader} is required.`);
-      return;
-    }
-
+  function updateEntry(
+    original: Record<string, string>,
+    updated: Record<string, string>,
+  ) {
+    if (!activeSheet) return;
     setSheets((current) =>
       current.map((sheet) =>
         sheet === activeSheet
           ? {
               ...sheet,
               items: sheet.items.map((item) =>
-                item === editingEntry ? updatedEntry : item,
+                item === original ? updated : item,
               ),
             }
           : sheet,
       ),
     );
-    setEditingEntry(null);
     setIsDirty(true);
-    setError("");
-  }
-
-  function cancelUpdatingEntry() {
-    setEditingEntry(null);
-    setError("");
   }
 
   function deleteEntry(entry: Record<string, string>) {
@@ -214,65 +172,23 @@ export default function App() {
       </section>
 
       <section className="collection" aria-label="Your collection">
-        <div className="collection-heading">
-          <div className="tabs" role="tablist" aria-label="Collection type">
-            {collections.map((kind, index) => {
-              const sheet = getSheetForCollection(sheets, kind);
-              const selected = activeCollection === kind;
-              return (
-                <button
-                  key={kind}
-                  className={`tab${selected ? " active" : ""}`}
-                  id={`tab-${kind}`}
-                  role="tab"
-                  aria-selected={selected}
-                  aria-controls="collection-panel"
-                  onClick={() => {
-                    setActiveCollection(kind);
-                    setSearch("");
-                    setIsAddingEntry(false);
-                    setEditingEntry(null);
-                  }}
-                >
-                  <span className="tab-index">0{index + 1}</span>
-                  {collectionLabels[kind]}
-                  <span className="tab-count">{sheet?.items.length ?? 0}</span>
-                </button>
-              );
-            })}
-          </div>
-          <div className="collection-tools">
-            {activeSheet && (
-              <button
-                className="text-button add-entry-button"
-                onClick={startAddingEntry}
-                disabled={isAddingEntry || editingEntry !== null}
-              >
-                <span aria-hidden="true">＋</span> Add{" "}
-                {entryLabels[activeCollection]}
-              </button>
-            )}
-            {isDirty && (
-              <button
-                className="text-button download-button"
-                onClick={downloadWorkbook}
-              >
-                <span aria-hidden="true">↓</span> Download updated XML
-              </button>
-            )}
-            <label className="search-box">
-              <span aria-hidden="true">⌕</span>
-              <input
-                type="search"
-                placeholder={`Search ${collectionLabels[activeCollection].toLowerCase()}…`}
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                aria-label={`Search ${collectionLabels[activeCollection]}`}
-              />
-              <kbd>/</kbd>
-            </label>
-          </div>
-        </div>
+        <CollectionNavigation
+          sheets={sheets}
+          activeCollection={activeCollection}
+          entryLabel={entryLabels[activeCollection]}
+          canEdit={!!activeSheet && !isAddingEntry && !isEditingEntry}
+          isDirty={isDirty}
+          search={search}
+          onSelectCollection={(kind) => {
+            setActiveCollection(kind);
+            setSearch("");
+            setIsAddingEntry(false);
+            setIsEditingEntry(false);
+          }}
+          onAddEntry={() => setIsAddingEntry(true)}
+          onDownload={downloadWorkbook}
+          onSearchChange={setSearch}
+        />
 
         <div
           className="table-wrap"
@@ -288,39 +204,13 @@ export default function App() {
           {activeSheet && activeSheet.headers.length > 0 ? (
             <>
               {isAddingEntry && (
-                <form className="entry-form" onSubmit={addEntry}>
-                  <div className="entry-form-heading">
-                    <h2>New {entryLabels[activeCollection]}</h2>
-                    <button
-                      type="button"
-                      className="form-cancel"
-                      onClick={() => setIsAddingEntry(false)}
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                  <div className="entry-fields">
-                    {activeSheet.headers.map((header) => (
-                      <label key={header}>
-                        <span>{header}</span>
-                        <input
-                          autoFocus={header === titleHeader}
-                          required={header === titleHeader}
-                          value={entryDraft[header] ?? ""}
-                          onChange={(event) =>
-                            setEntryDraft((current) => ({
-                              ...current,
-                              [header]: event.target.value,
-                            }))
-                          }
-                        />
-                      </label>
-                    ))}
-                  </div>
-                  <button className="upload-button" type="submit">
-                    Add to collection
-                  </button>
-                </form>
+                <EntryForm
+                  headers={activeSheet.headers}
+                  titleHeader={titleHeader}
+                  entryLabel={entryLabels[activeCollection]}
+                  onCancel={() => setIsAddingEntry(false)}
+                  onSubmit={addEntry}
+                />
               )}
               <div className="result-line">
                 <span>{activeSheet.name}</span>
@@ -330,89 +220,17 @@ export default function App() {
                 </span>
               </div>
               {visibleItems.length > 0 ? (
-                <div className="table-scroll">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th className="row-number">NO.</th>
-                        {activeSheet.headers.map((header) => (
-                          <th key={header}>{header}</th>
-                        ))}
-                        <th className="actions-heading">ACTION</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {visibleItems.map((item, index) => {
-                        const isEditing = editingEntry === item;
-                        return (
-                          <tr key={`${activeSheet.name}-${index}`}>
-                            <td className="row-number">
-                              {String(index + 1).padStart(2, "0")}
-                            </td>
-                            {activeSheet.headers.map((header) => (
-                              <td key={header}>
-                                {isEditing ? (
-                                  <input
-                                    className="row-edit-input"
-                                    aria-label={`Update ${header}`}
-                                    autoFocus={header === titleHeader}
-                                    value={editDraft[header] ?? ""}
-                                    onChange={(event) =>
-                                      setEditDraft((current) => ({
-                                        ...current,
-                                        [header]: event.target.value,
-                                      }))
-                                    }
-                                  />
-                                ) : (
-                                  item[header] || (
-                                    <span className="empty-cell">—</span>
-                                  )
-                                )}
-                              </td>
-                            ))}
-                            <td className="actions-cell">
-                              {isEditing ? (
-                                <div className="row-edit-actions">
-                                  <button
-                                    className="row-action-button save-row-button"
-                                    aria-label={`Save update to ${editDraft[titleHeader] || entryLabels[activeCollection]}`}
-                                    onClick={saveUpdatedEntry}
-                                  >
-                                    Save
-                                  </button>
-                                  <button
-                                    className="row-action-button cancel-row-button"
-                                    onClick={cancelUpdatingEntry}
-                                  >
-                                    Cancel
-                                  </button>
-                                </div>
-                              ) : (
-                                <div className="row-edit-actions">
-                                  <button
-                                    className="row-action-button"
-                                    aria-label={`Update ${item[titleHeader] || entryLabels[activeCollection]}`}
-                                    onClick={() => startUpdatingEntry(item)}
-                                  >
-                                    Update
-                                  </button>
-                                  <button
-                                    className="delete-button"
-                                    aria-label={`Delete ${item[titleHeader] || entryLabels[activeCollection]}`}
-                                    onClick={() => deleteEntry(item)}
-                                  >
-                                    Delete
-                                  </button>
-                                </div>
-                              )}
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
+                <EntriesTable
+                  key={activeCollection}
+                  headers={activeSheet.headers}
+                  items={visibleItems}
+                  titleHeader={titleHeader}
+                  entryLabel={entryLabels[activeCollection]}
+                  sortEnabled={activeCollection !== "series"}
+                  onDelete={deleteEntry}
+                  onUpdate={updateEntry}
+                  onEditingChange={setIsEditingEntry}
+                />
               ) : (
                 <div className="empty-state">
                   <span className="empty-mark" aria-hidden="true">
@@ -429,7 +247,10 @@ export default function App() {
                       : "Try another search, or clear the field to see everything."}
                   </p>
                   {activeSheet.items.length === 0 && (
-                    <button className="text-button" onClick={startAddingEntry}>
+                    <button
+                      className="text-button"
+                      onClick={() => setIsAddingEntry(true)}
+                    >
                       Add a {entryLabels[activeCollection]}{" "}
                       <span aria-hidden="true">＋</span>
                     </button>

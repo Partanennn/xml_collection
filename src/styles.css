@@ -408,6 +408,29 @@ th {
   text-transform: uppercase;
   white-space: nowrap;
 }
+.sortable-heading {
+  padding-right: 16px;
+}
+.sort-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  text-transform: inherit;
+}
+.sort-button span {
+  color: var(--green);
+  font-family: "DM Sans", sans-serif;
+  font-size: 12px;
+}
+.sort-button:hover {
+  color: var(--ink);
+}
 td {
   padding: 16px 16px 16px 0;
   border-bottom: 1px solid #e1e6df;
