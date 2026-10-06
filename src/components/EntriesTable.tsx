@@ -10,6 +10,7 @@ interface EntriesTableProps {
   titleHeader: string;
   entryLabel: string;
   sortEnabled: boolean;
+  purchasePlaces: string[];
   onDelete: (entry: Record<string, string>) => void;
   onUpdate: (
     original: Record<string, string>,
@@ -24,6 +25,7 @@ export default function EntriesTable({
   titleHeader,
   entryLabel,
   sortEnabled,
+  purchasePlaces,
   onDelete,
   onUpdate,
   onEditingChange,
@@ -165,6 +167,27 @@ export default function EntriesTable({
                             setError("");
                           }}
                         />
+                      ) : header.trim().toLocaleLowerCase() ===
+                        "purchase place" ? (
+                        <select
+                          className="row-edit-select"
+                          aria-label={`Update ${header}`}
+                          value={draft[header] ?? ""}
+                          onChange={(event) => {
+                            setDraft((current) => ({
+                              ...current,
+                              [header]: event.target.value,
+                            }));
+                            setError("");
+                          }}
+                        >
+                          <option value="">Select a purchase place</option>
+                          {purchasePlaces.map((place) => (
+                            <option key={place} value={place}>
+                              {place}
+                            </option>
+                          ))}
+                        </select>
                       ) : (
                         <input
                           className="row-edit-input"

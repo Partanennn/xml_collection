@@ -8,6 +8,7 @@ interface EntryFormProps {
   headers: string[];
   titleHeader: string;
   entryLabel: string;
+  purchasePlaces: string[];
   onCancel: () => void;
   onSubmit: (entry: Record<string, string>) => void;
 }
@@ -16,6 +17,7 @@ export default function EntryForm({
   headers,
   titleHeader,
   entryLabel,
+  purchasePlaces,
   onCancel,
   onSubmit,
 }: EntryFormProps) {
@@ -55,6 +57,23 @@ export default function EntryForm({
                   }))
                 }
               />
+            ) : header.trim().toLocaleLowerCase() === "purchase place" ? (
+              <select
+                value={draft[header] ?? ""}
+                onChange={(event) =>
+                  setDraft((current) => ({
+                    ...current,
+                    [header]: event.target.value,
+                  }))
+                }
+              >
+                <option value="">Select a purchase place</option>
+                {purchasePlaces.map((place) => (
+                  <option key={place} value={place}>
+                    {place}
+                  </option>
+                ))}
+              </select>
             ) : (
               <input
                 autoFocus={header === titleHeader}

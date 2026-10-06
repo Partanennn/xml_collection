@@ -388,6 +388,20 @@ kbd {
   font-size: 12px;
   text-transform: none;
 }
+.entry-fields select,
+.row-edit-select {
+  width: 100%;
+  min-width: 150px;
+  height: 35px;
+  padding: 0 9px;
+  border: 1px solid #cfd8ce;
+  border-radius: 2px;
+  outline-color: var(--green);
+  background: #fff;
+  color: var(--ink);
+  font-family: "DM Sans", sans-serif;
+  font-size: 12px;
+}
 .entry-fields input[type="checkbox"],
 .row-edit-input[type="checkbox"] {
   width: 17px;
@@ -479,6 +493,11 @@ tbody tr:hover {
 .row-edit-input[type="checkbox"] {
   width: 17px;
   min-width: 17px;
+}
+.row-edit-select {
+  width: max(150px, 100%);
+  height: 32px;
+  padding: 0 7px;
 }
 .row-edit-actions {
   display: flex;

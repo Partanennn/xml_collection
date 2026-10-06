@@ -42,6 +42,20 @@ export default function App() {
       ),
     );
   }, [activeSheet, search]);
+  const purchasePlaces = useMemo(() => {
+    const places = sheets.flatMap((sheet) => {
+      const purchasePlaceHeader = sheet.headers.find(
+        (header) => header.trim().toLocaleLowerCase() === "purchase place",
+      );
+      if (!purchasePlaceHeader) return [];
+      return sheet.items
+        .map((item) => item[purchasePlaceHeader]?.trim() ?? "")
+        .filter(Boolean);
+    });
+    return [...new Set(places)].sort((left, right) =>
+      left.localeCompare(right, undefined, { sensitivity: "base" }),
+    );
+  }, [sheets]);
 
   async function loadFile(file?: File) {
     if (!file) return;
@@ -208,6 +222,7 @@ export default function App() {
                   headers={activeSheet.headers}
                   titleHeader={titleHeader}
                   entryLabel={entryLabels[activeCollection]}
+                  purchasePlaces={purchasePlaces}
                   onCancel={() => setIsAddingEntry(false)}
                   onSubmit={addEntry}
                 />
@@ -227,6 +242,7 @@ export default function App() {
                   titleHeader={titleHeader}
                   entryLabel={entryLabels[activeCollection]}
                   sortEnabled={activeCollection !== "series"}
+                  purchasePlaces={purchasePlaces}
                   onDelete={deleteEntry}
                   onUpdate={updateEntry}
                   onEditingChange={setIsEditingEntry}
