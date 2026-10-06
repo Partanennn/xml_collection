@@ -1,6 +1,11 @@
 import readXlsxFile from "read-excel-file/browser";
 import writeXlsxFile from "write-excel-file/browser";
 import {
+  isPriceField,
+  isValidPriceValue,
+  normalizePriceValue,
+} from "./fieldValues";
+import {
   makeUniqueHeaders,
   normalizeCollectionSheets,
   type CollectionSheet,
@@ -44,7 +49,13 @@ export async function serializeSpreadsheetXlsx(
     data: [
       sheet.headers,
       ...sheet.items.map((item) =>
-        sheet.headers.map((header) => item[header] || null),
+        sheet.headers.map((header) => {
+          const value = item[header] ?? "";
+          if (isPriceField(header) && value && isValidPriceValue(value)) {
+            return Number(normalizePriceValue(value));
+          }
+          return value || null;
+        }),
       ),
     ],
   }));

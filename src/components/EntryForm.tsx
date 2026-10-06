@@ -1,4 +1,5 @@
 import { type FormEvent, useState } from "react";
+import { isPriceField, normalizeFieldValue } from "../lib/fieldValues";
 
 function isDigitalizeField(header: string) {
   return header.toLocaleLowerCase() === "digitalize";
@@ -39,7 +40,7 @@ export default function EntryForm({
           header.trim().toLocaleLowerCase() === "purchase place" &&
           isEnteringNewPurchasePlace
             ? newPurchasePlace.trim()
-            : (draft[header]?.trim() ?? ""),
+            : normalizeFieldValue(header, draft[header] ?? ""),
         ]),
       ),
     );
@@ -111,6 +112,26 @@ export default function EntryForm({
                   />
                 )}
               </>
+            ) : isPriceField(header) ? (
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                inputMode="decimal"
+                value={draft[header] ?? ""}
+                onChange={(event) =>
+                  setDraft((current) => ({
+                    ...current,
+                    [header]: event.target.value,
+                  }))
+                }
+                onBlur={(event) =>
+                  setDraft((current) => ({
+                    ...current,
+                    [header]: normalizeFieldValue(header, event.target.value),
+                  }))
+                }
+              />
             ) : (
               <input
                 autoFocus={header === titleHeader}

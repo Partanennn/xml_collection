@@ -1,4 +1,9 @@
 import { useState } from "react";
+import {
+  isPriceField,
+  isValidPriceValue,
+  normalizeFieldValue,
+} from "../lib/fieldValues";
 
 function isDigitalizeField(header: string) {
   return header.toLocaleLowerCase() === "digitalize";
@@ -104,6 +109,11 @@ export default function EntriesTable({
 
   function saveEditing() {
     if (!editingEntry) return;
+    const priceHeader = headers.find(isPriceField);
+    if (priceHeader && !isValidPriceValue(draft[priceHeader] ?? "")) {
+      setError("Enter a non-negative price with up to two decimal places.");
+      return;
+    }
     const purchasePlaceHeader = headers.find(
       (header) => header.trim().toLocaleLowerCase() === "purchase place",
     );
@@ -116,7 +126,7 @@ export default function EntriesTable({
         header,
         header === purchasePlaceHeader && isEnteringNewPurchasePlace
           ? newPurchasePlace.trim()
-          : (draft[header]?.trim() ?? ""),
+          : normalizeFieldValue(header, draft[header] ?? ""),
       ]),
     );
     if (!updated[titleHeader]) {
@@ -246,6 +256,32 @@ export default function EntriesTable({
                             />
                           )}
                         </div>
+                      ) : isPriceField(header) ? (
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          inputMode="decimal"
+                          className="row-edit-input"
+                          aria-label={`Update ${header}`}
+                          value={draft[header] ?? ""}
+                          onChange={(event) => {
+                            setDraft((current) => ({
+                              ...current,
+                              [header]: event.target.value,
+                            }));
+                            setError("");
+                          }}
+                          onBlur={(event) =>
+                            setDraft((current) => ({
+                              ...current,
+                              [header]: normalizeFieldValue(
+                                header,
+                                event.target.value,
+                              ),
+                            }))
+                          }
+                        />
                       ) : (
                         <input
                           className="row-edit-input"

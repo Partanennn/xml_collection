@@ -1,3 +1,9 @@
+import {
+  isPriceField,
+  isValidPriceValue,
+  normalizePriceValue,
+} from "./fieldValues";
+
 export type CollectionKind = "movies" | "books" | "series";
 
 export interface CollectionSheet {
@@ -89,6 +95,7 @@ export function normalizeCollectionSheets(
         header.trim().toLocaleLowerCase() ===
         digitalizeHeader.toLocaleLowerCase(),
     );
+    const priceColumn = headers.find(isPriceField);
     const items = sheet.items.map((item) => {
       const completeItem = {
         ...Object.fromEntries(missingHeaders.map((header) => [header, ""])),
@@ -100,6 +107,11 @@ export function normalizeCollectionSheets(
         )
           ? "X"
           : "";
+      }
+      if (priceColumn) {
+        completeItem[priceColumn] = normalizePriceValue(
+          completeItem[priceColumn],
+        );
       }
       return completeItem;
     });
@@ -134,6 +146,7 @@ export function serializeSpreadsheetXml(sheets: CollectionSheet[]): string {
           xmlDocument,
           sheet.headers.map((header) => item[header] ?? ""),
           namespace,
+          sheet.headers,
         ),
       );
     }
@@ -176,14 +189,24 @@ function createXmlRow(
   xmlDocument: XMLDocument,
   values: string[],
   namespace: string,
+  headers?: string[],
 ): Element {
   const row = xmlDocument.createElementNS(namespace, "Row");
 
-  for (const value of values) {
+  for (const [index, value] of values.entries()) {
     const cell = xmlDocument.createElementNS(namespace, "Cell");
     const data = xmlDocument.createElementNS(namespace, "Data");
-    data.setAttributeNS(namespace, "ss:Type", "String");
-    data.textContent = value;
+    const isNumericPrice =
+      headers?.[index] &&
+      isPriceField(headers[index]) &&
+      value !== "" &&
+      isValidPriceValue(value);
+    data.setAttributeNS(
+      namespace,
+      "ss:Type",
+      isNumericPrice ? "Number" : "String",
+    );
+    data.textContent = isNumericPrice ? normalizePriceValue(value) : value;
     cell.appendChild(data);
     row.appendChild(cell);
   }

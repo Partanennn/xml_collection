@@ -1,1 +1,1 @@
-{"root":["./src/app.tsx","./src/main.tsx","./src/components/collectionnavigation.tsx","./src/components/entriestable.tsx","./src/components/entryform.tsx","./src/lib/spreadsheetxlsx.ts","./src/lib/spreadsheetxml.ts","./vite.config.ts"],"version":"5.8.3"}
+{"root":["./src/app.tsx","./src/main.tsx","./src/components/collectionnavigation.tsx","./src/components/entriestable.tsx","./src/components/entryform.tsx","./src/lib/fieldvalues.ts","./src/lib/spreadsheetxlsx.ts","./src/lib/spreadsheetxml.ts","./vite.config.ts"],"version":"5.8.3"}
