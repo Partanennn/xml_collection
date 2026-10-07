@@ -546,6 +546,21 @@ tbody tr:hover {
 .empty-cell {
   color: #b1bab2;
 }
+.rating-display {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  white-space: nowrap;
+  cursor: help;
+}
+.rating-star {
+  color: #b6beb7;
+  font-size: 15px;
+  line-height: 1;
+}
+.rating-star.filled {
+  color: var(--orange);
+}
 
 .empty-state {
   display: grid;

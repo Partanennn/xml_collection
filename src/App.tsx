@@ -1,8 +1,8 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import CollectionNavigation from "./components/CollectionNavigation";
 import EntriesTable from "./components/EntriesTable";
 import EntryForm from "./components/EntryForm";
-import sampleWorkbook from "./data/sample.xml?raw";
+import defaultWorkbookUrl from "./data/Movie Collection.xlsx?url";
 import {
   collectionLabels,
   getSheetForCollection,
@@ -23,18 +23,54 @@ const entryLabels: Record<CollectionKind, string> = {
 };
 
 export default function App() {
-  const [sheets, setSheets] = useState<CollectionSheet[]>(() =>
-    parseSpreadsheetXml(sampleWorkbook),
-  );
+  const [sheets, setSheets] = useState<CollectionSheet[]>(() => []);
   const [activeCollection, setActiveCollection] =
     useState<CollectionKind>("movies");
   const [search, setSearch] = useState("");
-  const [fileName, setFileName] = useState("sample-collection.xml");
+  const [fileName, setFileName] = useState("Movie Collection.xlsx");
   const [error, setError] = useState("");
+  const [isLoadingDefault, setIsLoadingDefault] = useState(true);
   const [isDirty, setIsDirty] = useState(false);
   const [isAddingEntry, setIsAddingEntry] = useState(false);
   const [isEditingEntry, setIsEditingEntry] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    let isCurrent = true;
+
+    async function loadDefaultWorkbook() {
+      try {
+        const response = await fetch(defaultWorkbookUrl);
+        if (!response.ok) {
+          throw new Error("Could not load Movie Collection.xlsx.");
+        }
+        const file = new File(
+          [await response.blob()],
+          "Movie Collection.xlsx",
+          {
+            type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          },
+        );
+        const parsedSheets = await parseSpreadsheetXlsx(file);
+        if (isCurrent) setSheets(parsedSheets);
+      } catch (cause) {
+        if (isCurrent) {
+          setError(
+            cause instanceof Error
+              ? cause.message
+              : "Could not load Movie Collection.xlsx.",
+          );
+        }
+      } finally {
+        if (isCurrent) setIsLoadingDefault(false);
+      }
+    }
+
+    void loadDefaultWorkbook();
+    return () => {
+      isCurrent = false;
+    };
+  }, []);
 
   const activeSheet = getSheetForCollection(sheets, activeCollection);
   const visibleItems = useMemo(() => {
@@ -234,7 +270,14 @@ export default function App() {
               {error}
             </p>
           )}
-          {activeSheet && activeSheet.headers.length > 0 ? (
+          {isLoadingDefault ? (
+            <div className="empty-state">
+              <span className="empty-mark" aria-hidden="true">
+                …
+              </span>
+              <h2>Opening your collection</h2>
+            </div>
+          ) : activeSheet && activeSheet.headers.length > 0 ? (
             <>
               {isAddingEntry && (
                 <EntryForm
@@ -312,7 +355,7 @@ export default function App() {
                 className="text-button"
                 onClick={() => fileInput.current?.click()}
               >
-                Choose an XML file <span aria-hidden="true">↗</span>
+                Choose a workbook <span aria-hidden="true">↗</span>
               </button>
             </div>
           )}

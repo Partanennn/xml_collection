@@ -1,6 +1,10 @@
 import {
+  isBlurayField,
+  isDigitalizedField,
+  isNewField,
   isPriceField,
   isValidPriceValue,
+  normalizeBooleanField,
   normalizePriceValue,
 } from "./fieldValues";
 
@@ -13,7 +17,9 @@ export interface CollectionSheet {
 }
 
 const purchaseHeaders = ["Purchase place", "Price", "Purchase date"];
-const digitalizeHeader = "Digitalize";
+const digitalizedHeader = "Digitalized";
+const blurayHeader = "Bluray";
+const newHeader = "New";
 
 const categoryMatchers: Record<CollectionKind, RegExp> = {
   movies: /movie|film/i,
@@ -78,35 +84,70 @@ export function normalizeCollectionSheets(
     const supportsDigitalize =
       categoryMatchers.movies.test(sheet.name) ||
       categoryMatchers.series.test(sheet.name);
-    const expectedHeaders = supportsDigitalize
-      ? [...purchaseHeaders, digitalizeHeader]
-      : purchaseHeaders;
+    const legacyDigitalizeHeader = sheet.headers.find(
+      (header) => header.trim().toLocaleLowerCase() === "digitalize",
+    );
+    const canonicalDigitalizedHeader = sheet.headers.find(
+      (header) => header.trim().toLocaleLowerCase() === "digitalized",
+    );
+    const existingHeaders = sheet.headers
+      .filter(
+        (header) =>
+          !(
+            legacyDigitalizeHeader &&
+            canonicalDigitalizedHeader &&
+            header === legacyDigitalizeHeader
+          ),
+      )
+      .map((header) =>
+        header === legacyDigitalizeHeader && !canonicalDigitalizedHeader
+          ? digitalizedHeader
+          : header,
+      );
+    const expectedHeaders = [
+      ...purchaseHeaders,
+      newHeader,
+      ...(supportsDigitalize ? [digitalizedHeader, blurayHeader] : []),
+    ];
     const missingHeaders = expectedHeaders.filter(
       (expectedHeader) =>
-        !sheet.headers.some(
+        !existingHeaders.some(
           (header) =>
             header.trim().toLocaleLowerCase() ===
             expectedHeader.toLocaleLowerCase(),
         ),
     );
-    const headers = [...sheet.headers, ...missingHeaders];
-    const digitalizeColumn = headers.find(
-      (header) =>
-        header.trim().toLocaleLowerCase() ===
-        digitalizeHeader.toLocaleLowerCase(),
-    );
+    const headers = [...existingHeaders, ...missingHeaders];
+    const digitalizedColumn = headers.find(isDigitalizedField);
+    const blurayColumn = headers.find(isBlurayField);
+    const newColumn = headers.find(isNewField);
     const priceColumn = headers.find(isPriceField);
     const items = sheet.items.map((item) => {
       const completeItem = {
         ...Object.fromEntries(missingHeaders.map((header) => [header, ""])),
         ...item,
       };
-      if (supportsDigitalize && digitalizeColumn) {
-        completeItem[digitalizeColumn] = /^(x|true|1)$/i.test(
-          completeItem[digitalizeColumn].trim(),
-        )
-          ? "X"
-          : "";
+      if (legacyDigitalizeHeader && digitalizedColumn) {
+        completeItem[digitalizedColumn] = normalizeBooleanField(
+          canonicalDigitalizedHeader
+            ? completeItem[canonicalDigitalizedHeader] ||
+                completeItem[legacyDigitalizeHeader]
+            : completeItem[legacyDigitalizeHeader],
+        );
+      } else if (digitalizedColumn && supportsDigitalize) {
+        completeItem[digitalizedColumn] = normalizeBooleanField(
+          completeItem[digitalizedColumn],
+        );
+      }
+      if (blurayColumn && supportsDigitalize) {
+        completeItem[blurayColumn] = normalizeBooleanField(
+          completeItem[blurayColumn],
+        );
+      }
+      if (newColumn) {
+        completeItem[newColumn] = normalizeBooleanField(
+          completeItem[newColumn],
+        );
       }
       if (priceColumn) {
         completeItem[priceColumn] = normalizePriceValue(

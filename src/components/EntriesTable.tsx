@@ -1,12 +1,21 @@
 import { useState } from "react";
 import {
+  isBlurayField,
+  isDigitalizedField,
+  isNewField,
   isPriceField,
+  isRatingField,
   isValidPriceValue,
+  getRatingDetails,
+  getRatingName,
   normalizeFieldValue,
+  ratingOptions,
 } from "../lib/fieldValues";
 
-function isDigitalizeField(header: string) {
-  return header.toLocaleLowerCase() === "digitalize";
+function isBooleanField(header: string) {
+  return (
+    isDigitalizedField(header) || isBlurayField(header) || isNewField(header)
+  );
 }
 
 const newPurchasePlaceOption = "__add_new_purchase_place__";
@@ -49,7 +58,7 @@ export default function EntriesTable({
   const [sort, setSort] = useState<{
     header: string;
     direction: "ascending" | "descending";
-  } | null>(null);
+  } | null>(() => ({ header: titleHeader, direction: "ascending" }));
 
   const sortedItems = sort
     ? [...items].sort((left, right) => {
@@ -194,7 +203,7 @@ export default function EntriesTable({
                 {headers.map((header) => (
                   <td key={header}>
                     {isEditing ? (
-                      isDigitalizeField(header) ? (
+                      isBooleanField(header) ? (
                         <input
                           type="checkbox"
                           className="row-edit-input digitalize-checkbox"
@@ -282,6 +291,32 @@ export default function EntriesTable({
                             }))
                           }
                         />
+                      ) : isRatingField(header) ? (
+                        <select
+                          className="row-edit-select"
+                          aria-label={`Update ${header}`}
+                          value={draft[header] ?? ""}
+                          onChange={(event) => {
+                            setDraft((current) => ({
+                              ...current,
+                              [header]: event.target.value,
+                            }));
+                            setError("");
+                          }}
+                        >
+                          <option value="">Select a rating</option>
+                          {draft[header] &&
+                            !ratingOptions.includes(draft[header]) && (
+                              <option value={draft[header]}>
+                                {getRatingName(draft[header])}
+                              </option>
+                            )}
+                          {ratingOptions.map((rating) => (
+                            <option key={rating} value={rating}>
+                              {getRatingName(rating)}
+                            </option>
+                          ))}
+                        </select>
                       ) : (
                         <input
                           className="row-edit-input"
@@ -297,6 +332,8 @@ export default function EntriesTable({
                           }}
                         />
                       )
+                    ) : isRatingField(header) ? (
+                      renderRating(item[header] ?? "")
                     ) : (
                       item[header] || <span className="empty-cell">—</span>
                     )}
@@ -349,5 +386,31 @@ export default function EntriesTable({
         </tbody>
       </table>
     </div>
+  );
+}
+
+function renderRating(value: string) {
+  const rating = getRatingDetails(value);
+  if (!rating) return value || <span className="empty-cell">—</span>;
+
+  return (
+    <span
+      className="rating-display"
+      role="img"
+      aria-label={`${rating.name}, ${rating.score} out of 5 stars`}
+      title={rating.name}
+    >
+      {Array.from({ length: 5 }, (_, index) => (
+        <span
+          key={index}
+          className={
+            index < rating.score ? "rating-star filled" : "rating-star"
+          }
+          aria-hidden="true"
+        >
+          {index < rating.score ? "★" : "☆"}
+        </span>
+      ))}
+    </span>
   );
 }

@@ -1,8 +1,19 @@
 import { type FormEvent, useState } from "react";
-import { isPriceField, normalizeFieldValue } from "../lib/fieldValues";
+import {
+  isBlurayField,
+  isDigitalizedField,
+  isNewField,
+  isPriceField,
+  isRatingField,
+  getRatingName,
+  normalizeFieldValue,
+  ratingOptions,
+} from "../lib/fieldValues";
 
-function isDigitalizeField(header: string) {
-  return header.toLocaleLowerCase() === "digitalize";
+function isBooleanField(header: string) {
+  return (
+    isDigitalizedField(header) || isBlurayField(header) || isNewField(header)
+  );
 }
 
 const newPurchasePlaceOption = "__add_new_purchase_place__";
@@ -58,7 +69,7 @@ export default function EntryForm({
         {headers.map((header) => (
           <label key={header}>
             <span>{header}</span>
-            {isDigitalizeField(header) ? (
+            {isBooleanField(header) ? (
               <input
                 type="checkbox"
                 checked={draft[header] === "X"}
@@ -132,6 +143,23 @@ export default function EntryForm({
                   }))
                 }
               />
+            ) : isRatingField(header) ? (
+              <select
+                value={draft[header] ?? ""}
+                onChange={(event) =>
+                  setDraft((current) => ({
+                    ...current,
+                    [header]: event.target.value,
+                  }))
+                }
+              >
+                <option value="">Select a rating</option>
+                {ratingOptions.map((rating) => (
+                  <option key={rating} value={rating}>
+                    {getRatingName(rating)}
+                  </option>
+                ))}
+              </select>
             ) : (
               <input
                 autoFocus={header === titleHeader}
